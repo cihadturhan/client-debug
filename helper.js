@@ -37,7 +37,7 @@
                 partial,
                 value = holder[key];
 
-        if (jQuery && value  instanceof jQuery)
+        if (typeof jQuery !== 'undefined' && value instanceof jQuery)
             return '"-jQuery-"';
 
         if (isNode(value) || isElement(value))
@@ -105,6 +105,22 @@
     };
 
 }());
+
+//Returns true if it is a DOM node
+function isNode(o) {
+    return (
+            typeof Node === "object" ? o instanceof Node :
+            o && typeof o === "object" && typeof o.nodeType === "number" && typeof o.nodeName === "string"
+            );
+}
+
+//Returns true if it is a DOM element    
+function isElement(o) {
+    return (
+            typeof HTMLElement === "object" ? o instanceof HTMLElement : //DOM2
+            o && typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string"
+            );
+}
 
 
 //sistemin offline olup olmadığını kontrol eden bir fonksiyon.

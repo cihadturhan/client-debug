@@ -9,16 +9,14 @@
 
         <title> <?php echo $list[0]; ?>  </title>
         <script>
-<?php echo '
             var user_id = 1;
-            var user_name = "admin";'
-?>
+            var user_name = "admin";
             var sock = (function() {
 
                 var socket = null;
 
                 function init() {
-                    var host = "ws://127.0.0.1:9000/ws"; // SET THIS TO YOUR SERVER
+                    var host = "ws://127.0.0.1:9000"; 
                     try {
                         socket = new WebSocket(host);
                         console.log('WebSocket - status ' + socket.readyState);
