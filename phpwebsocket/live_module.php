@@ -3,10 +3,10 @@
     <head>
         <meta charset="UTF-8">
         <title>Admin Page</title>
-        
-        <script src="jquery-1.9.0/jquery-1.8.3.min.js"> </script>
-        <script src="cookieManager.js"> </script>
-        
+
+        <script src="jquery-1.9.0/jquery-1.8.3.min.js"></script>
+        <script src="cookieManager.js"></script>
+
         <title> <?php echo $list[0]; ?>  </title>
         <script>
 <?php echo '
@@ -25,7 +25,8 @@
                         socket.onopen = function(msg) {
                             console.log("Welcome - status " + this.readyState);
                             var url = window.location.pathname;
-                            var page = url.substring(url.lastIndexOf('/') + 1);
+                            var page = url.replace(/^.*[\\\/]/, '').replace(/.[^.]+$/, '');
+                            (page === '') && (page = 'index');
                             var info = {method: 'register', user_id: user_id, user_name: user_name, sess: 'abc', page: page};
                             send(JSON.stringify(info));
                         };

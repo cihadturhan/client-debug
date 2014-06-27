@@ -6,8 +6,13 @@
  * @name socketSend
  * @function
  */
+userData = {
+    user_id: 0,
+    user_name: 'myname',
+    sess: createGuid()
+}
 
-var socketSend = (function() {
+var socketWrapper = (function() {
 
     var socket = null;
     function init() {
@@ -19,8 +24,9 @@ var socketSend = (function() {
                 console.log("Welcome - status " + this.readyState);
                 // kullanici bilgilerini dogrulama
                 var url = window.location.pathname;
-                var page = url.substring(url.lastIndexOf('/') + 1);
-                var info = {method: 'register', user_id: user_id, user_name: user_name, sess: readCookie('bilim'), page: page};
+                var page = url.replace(/^.*[\\\/]/, '').replace(/.[^.]+$/, '');
+                (page === '') && (page = 'index');
+                var info = {method: 'register', user_id: userData.user_id, user_name: userData.user_name, sess: userData.sess, page: page};
                 send(JSON.stringify(info));
             };
             socket.onmessage = function(msg) {
@@ -50,7 +56,6 @@ var socketSend = (function() {
         catch (ex) {
             log(ex);
         }
-        $("msg").focus();
     }
 
     function send(msg) {

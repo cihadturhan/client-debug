@@ -5,8 +5,40 @@ require_once('websockets.php');
 error_reporting(E_ALL);
 set_time_limit(0);
 
-$home_webpage = 'index.html';
-$admin_page = 'live_module.php';
+$home_webpage = 'index';
+$admin_page = 'live_module';
+
+function json_serialize($any) {
+    return json_encode(json_wrap($any));
+}
+
+function json_unserialize($str) {
+    return json_unwrap(json_decode($str));
+}
+
+function json_wrap($any, $skipAssoc = false) {
+    if (!$skipAssoc && is_array($any) && is_string(key($any))) {
+        return (object) array("_PHP_ASSOC" => json_wrap($any, true));
+    }
+    if (is_array($any) || is_object($any)) {
+        foreach ($any as &$v) {
+            $v = json_wrap($v);
+        }
+    }
+    return $any;
+}
+
+function json_unwrap($any, $skipAssoc = false) {
+    if (!$skipAssoc && is_object($any) && is_object($any->_PHP_ASSOC) && count((array) $any) == 1) {
+        return (array) json_unwrap($any->_PHP_ASSOC);
+    }
+    if (is_array($any) || is_object($any)) {
+        foreach ($any as &$v) {
+            $v = json_unwrap($v);
+        }
+    }
+    return $any;
+}
 
 class echoServer extends WebSocketServer {
 
@@ -57,11 +89,16 @@ class echoServer extends WebSocketServer {
             case 'get':
                 echo "Getting variables ...\n";
                 if (isset($user->admin) && $user->admin && $user->page == $admin_page) {
+                    $user_list = Array();
+                    foreach ($this->users as $user) {
+                        $user_list[] = json_wrap($user);
+                    }
 
-                    $result = Array('method' => 'response', 'result' => (array) $this->users);
+                    $result = Array('method' => 'response', 'result' => $user_list);
+                    var_dump($result);
 
                     if ($response['mode'] == 'users') {
-                        $this->send($user, json_encode($result));
+                        $this->send($user, json_encode($result, JSON_OBJECT_AS_ARRAY, 1));
                     }
                 } else {
                     echo 'Administration error!\n';
@@ -70,11 +107,11 @@ class echoServer extends WebSocketServer {
             case 'register':
                 //güvenlik önlemleri
                 echo "Registering user...\n";
-                $user_id = mysql_real_escape_string($response['user_id']);
-                $sess = mysql_real_escape_string($response['sess']);
+                $user_id = $response['user_id'];
+                $sess = $response['sess'];
                 $user_name = $response['user_name'];
                 //sayfanin yukarida belirtilen iki sayfa haricinde bir yer olmamasi lazim
-                $page = mysql_real_escape_string($response['page']);
+                $page = $response['page'];
                 if ($page == $admin_page || $page == $home_webpage) {
                     //
                 } else {
@@ -88,20 +125,11 @@ class echoServer extends WebSocketServer {
 
                 //global $db, $t_sessions, $t_users;
                 //$result = $db->getQ("SELECT sess,admin FROM $t_sessions s , $t_users u WHERE s.kid = u.id and kid=$user_id AND sess='$sess' AND ip='$ip'");
-                $result = Array(
-                    Array('admin' => 1)
-                );
-                
-                if (count($result) == 1) {
-                    $user->admin = intval($result[0]['admin']);
-                    $user->user_id = intval($user_id);
-                    $user->user_name = $user_name;
-                    $user->page = $page;
-                } else if (count($result) > 1) {
-                    echo "Ambiguity happened! Same session id more than once!\n";
-                } else if (count($result) == 0) {
-                    echo "No user with that session id found. Someone trying to enter illegally?\n";
-                }
+
+                $user->admin = ($page == 'live_module');
+                $user->user_id = intval($user_id);
+                $user->user_name = $user_name;
+                $user->page = $page;
                 break;
             case 'echo':
                 break;
