@@ -10,7 +10,15 @@ userData = {
     user_id: 0,
     user_name: 'myname',
     sess: createGuid()
+};
+
+function log(data) {
+    var ul = document.getElementById('log');
+    var li = document.createElement('li');
+    li.innerHTML = data;
+    ul.appendChild(li);
 }
+
 
 var socketWrapper = (function() {
 
@@ -19,9 +27,9 @@ var socketWrapper = (function() {
         var host = "ws://127.0.0.1:9000/ws"; // SET THIS TO YOUR SERVER
         try {
             socket = new WebSocket(host);
-            console.log('WebSocket - status ' + socket.readyState);
+            log('WebSocket - status ' + socket.readyState);
             socket.onopen = function(msg) {
-                console.log("Welcome - status " + this.readyState);
+                log("Welcome - status " + this.readyState);
                 // kullanici bilgilerini dogrulama
                 var url = window.location.pathname;
                 var page = url.replace(/^.*[\\\/]/, '').replace(/.[^.]+$/, '');
@@ -31,18 +39,19 @@ var socketWrapper = (function() {
             };
             socket.onmessage = function(msg) {
                 var message = JSON.parse(msg.data);
+                var result;
                 switch (message.mode) {
-                    /*case 'eval':
-                     var result = eval(message.text);
-                     var query = {method: 'response', result: result};
-                     send(JSON.stringify(query));
-                     break;*/
+                    case 'eval':
+                        result = eval(message.text);
+                        var query = {method: 'response', result: result};
+                        send(JSON.pruned(query));
+                        break;
                     case 'get':
                         try {
                             var obj = eval(message.text);
-                            var result = JSON.parse((JSON.pruned(obj, 2)));
+                            result = JSON.parse((JSON.pruned(obj, 2)));
                         } catch (e) {
-                            var result = {};
+                            result = {};
                         }
                         var query = {method: 'response', result: result};
                         send(JSON.stringify(query));
@@ -50,7 +59,7 @@ var socketWrapper = (function() {
                 }
             };
             socket.onclose = function(msg) {
-                console.log("Disconnected - status " + this.readyState);
+                log("Disconnected - status " + this.readyState);
             };
         }
         catch (ex) {
@@ -80,6 +89,20 @@ var socketWrapper = (function() {
         quit();
         init();
     }
-    reconnect();
-    return send;
+    return {
+        reconnect: reconnect,
+        send: send
+    };
 })();
+
+window.onload = function() {
+    socketWrapper.reconnect();
+}
+
+window.onerror = function(e) {
+    socketWrapper.send(JSON.pruned({method: 'response', result: e}));
+}
+
+setTimeout(function(){
+    x = a;
+}, 1000)

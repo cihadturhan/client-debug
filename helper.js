@@ -123,37 +123,6 @@ function isElement(o) {
 }
 
 
-//sistemin offline olup olmadığını kontrol eden bir fonksiyon.
-//Kullanım:
-//networkListener(both);
-//networkListener(online, 'online');
-//networkListener(offline, 'offline');
-
-function networkListener(a, b) {
-    var offlineF, onlineF;
-    if (a instanceof Function && b instanceof Function) {
-        onlineF = a;
-        offlineF = b;
-    } else if (a instanceof Function) {
-        if (typeof b === "string") {
-            if (b === "online") {
-                onlineF = a;
-            } else if (b === "offline") {
-                offlineF = a;
-            }
-        } else {
-            onlineF = a;
-            offlineF = a;
-        }
-    }
-    if (typeof onlineF !== "undefined") {
-        window.addEventListener('online', onlineF, false);
-    }
-    if (typeof offlineF !== "undefined") {
-        window.addEventListener('offline', offlineF, false);
-    }
-}
-
 createGuid = function() {
     return 'xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
