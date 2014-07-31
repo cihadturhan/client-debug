@@ -1,15 +1,13 @@
-
 /**
- * Websocket iletisimi icin kullanilir. Su an aktif degildir
- * Eger gerekli olursa burdan kullanilabilir
- * 
- * @name socketSend
+ * Socket.io implementation on client-debug
+ * @name 
  * @function
  */
+
 userData = {
-    user_id: 0,
+    user_id: Math.floor(1000 * Math.random()),
     user_name: 'myname',
-    sess: createGuid()
+    "you": "can assign any user data here"
 };
 
 function log(data) {
@@ -18,6 +16,27 @@ function log(data) {
     li.innerHTML = data;
     ul.appendChild(li);
 }
+
+var clientDebug = (function() {
+    var socket = io();
+    socket.emit('register', userData);
+
+    socket.on('eval', function(message) {
+        var result = eval(message.text);
+        socket.emit('response', result);
+    });
+
+    socket.on('get', function(message) {
+        try {
+            var obj = eval(message.text);
+            var result = JSON.parse((JSON.pruned(obj, 2)));
+        } catch (e) {
+            var result = {};
+        }
+        var query = {method: 'response', result: result};
+        send(JSON.stringify(query));
+    });
+})();
 
 
 var socketWrapper = (function() {
@@ -42,9 +61,7 @@ var socketWrapper = (function() {
                 var result;
                 switch (message.mode) {
                     case 'eval':
-                        result = eval(message.text);
-                        var query = {method: 'response', result: result};
-                        send(JSON.pruned(query));
+                        
                         break;
                     case 'get':
                         try {
@@ -97,12 +114,8 @@ var socketWrapper = (function() {
 
 window.onload = function() {
     socketWrapper.reconnect();
-}
+};
 
 window.onerror = function(e) {
     socketWrapper.send(JSON.pruned({method: 'response', result: e}));
-}
-
-setTimeout(function(){
-    x = a;
-}, 1000)
+};
