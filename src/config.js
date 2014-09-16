@@ -1,74 +1,203 @@
-var config = {
+config = {
     "register": {
-        //client doesn't listen a register event
+//client doesn't listen a register event
         client: null,
         server: function(message) {
-            var response = JSON.parse(message);
-            this.clientData = {
-                user_id: response.user_id,
-                sess: response.sess,
-                user_name: response.user_name,
-                page: response.page,
-                admin: (response.page === admin_page)
-            };
+            this.clientData = message;
+
+            this.leave('unregistered');
+            //Implement here your own admin verification
+            if (this.clientData.admin) {
+                this.join('admin');
+            } else {
+                this.join('client');
+            }
+
+            //send new data to admins
+            var userData = this.server.of('/').sockets.map(function(d) {
+                return d.clientData;
+            });
+
+            this.nsp.in('admin').emit('userlist', JSON.decycle(userData));
         },
         admin: function() {
             //refresh user list
         }
     },
+    disconnect: {
+        server: function() {
+            var userData = this.server.of('/').sockets.map(function(d) {
+                return d.clientData;
+            });
+
+            this.nsp.in('admin').emit('userlist', JSON.decycle(userData));
+        }
+    },
+    /*
+     * admin emits ping command with a user list to server 
+     * and server emits ping to a list of clients
+     *                                
+     * admin (id1,id2...) -> server -> client1(id1)
+     *                              -> client2(id2)
+     *                                 . . .
+     */
+
+    ping: {
+        client: function() {
+
+        },
+        server: function(message, userIds) {
+            if (this.rooms.indexOf('admin') > -1) {
+
+                //TO-DO: Check message before it is sent to user
+
+                console.log("Eval command is forwarding...\n");
+                var clients = this.nsp.in('client').sockets;
+
+                //Loop for all clients
+                var foundClients = clients.filter(function(d) {
+                    // Check if the current user id is inside the list sent from admin
+                    return userIds.indexOf(d.clientData.userId) > -1;
+                });
+                //TO-DO
+            } else {
+                console.log('Administration error!');
+            }
+        },
+        //admin doesn't listen pong event, it just emits 
+        admin: null
+    },
+    /*
+     * 
+     * client1(id1) -> server (id1:ping1,id2:ping2...) -> admin
+     * client2(id2) ->
+     * . . .
+     *
+     */
+    pong: {
+        //client doesn't listen pong event, it just emits 
+        client: null,
+        server: function() {
+
+        },
+        admin: {
+        }
+    },
     "eval": {
         client: function(message) {
-            var result = eval(message.text);
-            socket.emit('response', result);
-        },
-        server: function(message) {
-            if (this.clientData.admin && this.clientData.page === admin_page) {
-                console.log("Forwarding...\n");
-                var forwarded_user = null;
-                for (var i = 0; i < that.clients.length; i++) {
-                    if (that.clients[i].userData.user_id === response.id) {
-                        return that.clients[i];
-                    }
+            var data, response;
+            try {
+                data = eval(message);
+                if (typeof data === 'function') {
+                    data = data.toString();
                 }
-
-                //verilen kullanici id'si bizde bulunmamis olabilir
-                if (forwarded_user === null) {
-                    console.log('Forwarded user not found!');
-                    return;
-                }
-
-                var query = {
-                    mode: response.mode,
-                    text: response.text
+            } catch (e) {
+                data = {
+                    message: e.message,
+                    stack: e.stack
                 };
+            }
 
-                try {
-                    forwarded_user.send(JSON.stringify(query));
-                } catch (e) {
-                    console.log(e);
+            response = {type: 'json', data: JSON.decycle(data)};
+
+            this.emit('response', response);
+        },
+        server: function(message, userIds) {
+            if (this.rooms.indexOf('admin') > -1) {
+
+                //TO-DO: Check message before it is sent to user
+
+                console.log("Eval command is forwarding...\n");
+                var clients = this.nsp.in('client').sockets;
+
+                //Loop for all clients
+                var foundClients = clients.filter(function(d) {
+                    // Check if the current user id is inside the list sent from admin
+                    return userIds.indexOf(d.clientData.userId) > -1;
+                });
+
+                // emit code to selected users
+                for (var i = 0; i < foundClients.length; i++) {
+                    foundClients[i].emit('eval', message);
                 }
             } else {
                 console.log('Administration error!');
             }
         },
         //admin doesn't listen eval event
+        admin: null
     },
     "response": {
-        client: {
+        client: null,
+        server: function(message) {
+            console.log('response...');
+            var admins = this.nsp.in('admin');
+            admins.emit('response', message);
         },
-        server: {
+        admin: function(message) {
+            console.log('response', message);
+            if (message && typeof message === 'object') {
+                switch (message.type) {
+                    case 'json':
+                        var text = message.data;
+                        (typeof text === 'undefined') && (text = 'undefined')
+                        var jsonText = JSON.stringify(text);
+                        try {
+                            viewer.view(jsonText);
+                        } catch (e) {
+                            console.log(e);
+                        }
+                        break;
+                    case 'html':
+                        var html = message.data;
+                        var iframe = $('#html-preview>iframe');
+                        iframe.attr('src', 'data:text/html;charset=utf-8,' + encodeURI(html));
+                        $('#html-preview').append(iframe);
+                        break;
+                    case 'text':
+                        var text = message.data;
+                        contenateOutput(text);
+                        break;
+                    default:
+                        console.error('Unknown message type');
+                        break;
+                }
+            }
+        }
+    },
+    userlist: {
+        client: null,
+        server: function(message) {
+            this.emit('userlist', JSON.decycle(this.server.of('/').sockets.map(function(d) {
+                return d.clientData;
+            })));
         },
-        admin: {
+        admin: function(message) {
+            var userData = JSON.retrocycle(message);
+            console.log(userData);
+            printUsers(userData);
+            contenateOutput('User Data Retrieved');
+        }
+    },
+    domSnapshot: {
+        client: function() {
+            var res = document.documentElement.serializeWithStyles();
+            var response = {type: 'html', data: res};
+            this.emit('response', response);
+        },
+        server: function() {
+            config.eval.server.call(this, arguments);
         }
     },
     echo: {
-        client: {
+        client: function(message) {
+            console.log(message);
         },
-        server: {
+        server: function(message) {
+            console.log(message);
         },
-        admin: {
+        admin: function(message) {
+            console.log(message);
         }
     }
-}
-
-
+};

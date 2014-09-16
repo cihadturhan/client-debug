@@ -1,5 +1,7 @@
 client-debug
 ============
+Think you have developed a web app, tested all the modules and released.<br/>
+And a problem occured on the client side because of localization, browser type etc.
 
 What do clients say when there is a problem in your web page?
 
@@ -7,7 +9,7 @@ What do clients say when there is a problem in your web page?
 
 What info do they provide?
 
-> A big nothing.
+> A big nothing. Because they are a  regular user.
 
 What does your boss say?
 
@@ -19,12 +21,13 @@ But, what error?
 
 Are you tired of this sh*t?
 
-Yes, I do and created this library because I'm over it. Without any detailed error log, it's a huge pain to resolve the problem. This library lets you
-connect the clients when they are on your site and gives you opportunity to do followings
+Yes, I do and created this library. Sometimes a detailed error log still doesn't work and
+you should be on the computer which customer uses. This library lets you connect the clients
+when they are on your web page and gives you opportunity to do followings:
 
 - Lazyload any javascript/css file and use it.
 
-- Dump complete HTML they are viewing all css and javascript files
+- Dump complete HTML they are viewing with all css and javascript files
 
 - Silently run your tests and see results
 
@@ -38,6 +41,6 @@ connect the clients when they are on your site and gives you opportunity to do f
 
 
 Serverside script only depends socket.io
+Admin panel uses jquery
 
-If you want to use admin interface as it is, angular.js is required. 
-Don't know angular? Convert it to a jquery and create a pull request. I'll happily accept it.
+Want to add new item on the list? Read [contributing.md](/blob/master/CONTRIBUTING.md) and submit a pull request, I'll happily accept it.

@@ -1,110 +1,179 @@
 (function() {
-    'use strict';
-    var DEFAULT_MAX_DEPTH = 6;
-    var DEFAULT_ARRAY_MAX_LENGTH = 50;
-    var seen; // Same variable used for all stringifications
 
-    Date.prototype.toPrunedJSON = Date.prototype.toJSON;
-    String.prototype.toPrunedJSON = String.prototype.toJSON;
+    if (typeof JSON.decycle !== 'function') {
+        JSON.decycle = function decycle(object, maxDepth) {
+            'use strict';
 
-    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-            escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-            meta = {// table of character substitutions
-                '\b': '\\b',
-                '\t': '\\t',
-                '\n': '\\n',
-                '\f': '\\f',
-                '\r': '\\r',
-                '"': '\\"',
-                '\\': '\\\\'
-            };
+            var DEFAULT_MAX_DEPTH = 3;
+            var DEFAULT_ARRAY_MAX_LENGTH = 50;
 
-    function quote(string) {
-        escapable.lastIndex = 0;
-        return escapable.test(string) ? '"' + string.replace(escapable, function(a) {
-            var c = meta[a];
-            return typeof c === 'string'
-                    ? c
-                    : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-        }) + '"' : '"' + string + '"';
+            var objects = [],
+                    paths = [],
+                    maxDepth = maxDepth ? maxDepth : DEFAULT_MAX_DEPTH;
+
+            return (function derez(value, path, currDepth) {
+                if (currDepth === 0)
+                    return '...';
+
+                var i, // The loop counter
+                        name, // Property name
+                        nu;         // The new object or array
+
+                //On chrome document.all return undefined and creates circular ref
+                if (typeof value === 'undefined')
+                    return undefined;
+
+                if (typeof value === 'object' && value !== null && !(value instanceof Boolean) && !(value instanceof Date) && !(value instanceof Number) && !(value instanceof RegExp) && !(value instanceof String)) {
+
+
+                    for (i = 0; i < objects.length; i += 1) {
+                        if (objects[i] === value) {
+                            return {$ref: paths[i]};
+                        }
+                    }
+
+                    objects.push(value);
+                    paths.push(path);
+
+                    if (Object.prototype.toString.apply(value) === '[object Array]') {
+                        nu = [];
+                        for (i = 0; i < value.length; i += 1) {
+                            nu[i] = derez(value[i], path + '[' + i + ']', currDepth - 1);
+                        }
+                    } else {
+
+                        nu = {};
+                        for (name in value) {
+                            if (Object.prototype.hasOwnProperty.call(value, name)) {
+                                nu[name] = derez(value[name],
+                                        path + '[' + JSON.stringify(name) + ']', currDepth - 1);
+                            }
+                        }
+                    }
+                    return nu;
+                }
+                return value;
+            }(object, '$', maxDepth));
+        };
     }
 
-    function str(key, holder, depthDecr, arrayMaxLength) {
-        var i, // The loop counter.
-                k, // The member key.
-                v, // The member value.
-                length,
-                partial,
-                value = holder[key];
 
-        if (typeof jQuery !== 'undefined' && value instanceof jQuery)
-            return '"-jQuery-"';
+    if (typeof JSON.retrocycle !== 'function') {
+        JSON.retrocycle = function retrocycle($) {
+            'use strict';
 
-        if (isNode(value) || isElement(value))
-            return '"-element-"';
+            var px =
+                    /^\$(?:\[(?:\d+|\"(?:[^\\\"\u0000-\u001f]|\\([\\\"\/bfnrt]|u[0-9a-zA-Z]{4}))*\")\])*$/;
 
-        if (key === 'options' || key === 'plotOptions' || key === 'htmlContent' || key === 'ticks' || key === 'tooltipOptions' || key === 'renderer' || key === 'styles' || key === 'style')
-            return '"-unnecessary-"';
+            (function rez(value) {
 
-        if (value && typeof value === 'object' && typeof value.toPrunedJSON === 'function') {
-            value = value.toPrunedJSON(key);
-        }
+                var i, item, name, path;
 
-
-
-        switch (typeof value) {
-            case 'string':
-                return quote(value);
-            case 'number':
-                return isFinite(value) ? String(value) : 'null';
-            case 'boolean':
-            case 'null':
-                return String(value);
-            case 'object':
-                if (!value) {
-                    return 'null';
-                }
-                if (depthDecr <= 0 || seen.indexOf(value) !== -1) {
-                    return '"-pruned-"';
-                }
-                seen.push(value);
-                partial = [];
-                if (Object.prototype.toString.apply(value) === '[object Array]') {
-                    length = Math.min(value.length, arrayMaxLength);
-                    for (i = 0; i < length; i += 1) {
-                        partial[i] = str(i, value, depthDecr - 1, arrayMaxLength) || 'null';
-                    }
-                    v = partial.length === 0
-                            ? '[]'
-                            : '[' + partial.join(',') + ']';
-                    return v;
-                }
-                for (k in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, k)) {
-                        try {
-                            v = str(k, value, depthDecr - 1, arrayMaxLength);
-                            if (v)
-                                partial.push(quote(k) + ':' + v);
-                        } catch (e) {
-                            // this try/catch due to some "Accessing selectionEnd on an input element that cannot have a selection." on Chrome
+                if (value && typeof value === 'object') {
+                    if (Object.prototype.toString.apply(value) === '[object Array]') {
+                        for (i = 0; i < value.length; i += 1) {
+                            item = value[i];
+                            if (item && typeof item === 'object') {
+                                path = item.$ref;
+                                if (typeof path === 'string' && px.test(path)) {
+                                    value[i] = eval(path);
+                                } else {
+                                    rez(item);
+                                }
+                            }
+                        }
+                    } else {
+                        for (name in value) {
+                            if (typeof value[name] === 'object') {
+                                item = value[name];
+                                if (item) {
+                                    path = item.$ref;
+                                    if (typeof path === 'string' && px.test(path)) {
+                                        value[name] = eval(path);
+                                    } else {
+                                        rez(item);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                v = partial.length === 0
-                        ? '{}'
-                        : '{' + partial.join(',') + '}';
-                return v;
-        }
+            }($));
+            return $;
+        };
     }
+})();
 
-    JSON.pruned = function(value, depthDecr, arrayMaxLength) {
-        seen = [];
-        depthDecr = depthDecr || DEFAULT_MAX_DEPTH;
-        arrayMaxLength = arrayMaxLength || DEFAULT_ARRAY_MAX_LENGTH;
-        return str('', {'': value}, depthDecr, arrayMaxLength);
-    };
 
-}());
+(function() {
+    if (typeof Element !== 'undefined') {
+        Element.prototype.serializeWithStyles = function() {
+
+            // Mapping between tag names and css default values lookup tables. This allows to exclude default values in the result.
+            var defaultStylesByTagName = {};
+
+            // Styles inherited from style sheets will not be rendered for elements with these tag names
+            var noStyleTags = {"BASE": true, "HEAD": true, "HTML": true, "META": true, "NOFRAME": true, "NOSCRIPT": true, "PARAM": true, "SCRIPT": true, "STYLE": true, "TITLE": true};
+
+            // This list determines which css default values lookup tables are precomputed at load time
+            // Lookup tables for other tag names will be automatically built at runtime if needed
+            var tagNames = ["A", "ABBR", "ADDRESS", "AREA", "ARTICLE", "ASIDE", "AUDIO", "B", "BASE", "BDI", "BDO", "BLOCKQUOTE", "BODY", "BR", "BUTTON", "CANVAS", "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "COMMAND", "DATALIST", "DD", "DEL", "DETAILS", "DFN", "DIV", "DL", "DT", "EM", "EMBED", "FIELDSET", "FIGCAPTION", "FIGURE", "FONT", "FOOTER", "FORM", "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", "HEADER", "HGROUP", "HR", "HTML", "I", "IFRAME", "IMG", "INPUT", "INS", "KBD", "KEYGEN", "LABEL", "LEGEND", "LI", "LINK", "MAP", "MARK", "MATH", "MENU", "META", "METER", "NAV", "NOBR", "NOSCRIPT", "OBJECT", "OL", "OPTION", "OPTGROUP", "OUTPUT", "P", "PARAM", "PRE", "PROGRESS", "Q", "RP", "RT", "RUBY", "S", "SAMP", "SCRIPT", "SECTION", "SELECT", "SMALL", "SOURCE", "SPAN", "STRONG", "STYLE", "SUB", "SUMMARY", "SUP", "SVG", "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD", "TIME", "TITLE", "TR", "TRACK", "U", "UL", "VAR", "VIDEO", "WBR"];
+
+            // Precompute the lookup tables.
+            for (var i = 0; i < tagNames.length; i++) {
+                if (!noStyleTags[tagNames[i]]) {
+                    defaultStylesByTagName[tagNames[i]] = computeDefaultStyleByTagName(tagNames[i]);
+                }
+            }
+
+            function computeDefaultStyleByTagName(tagName) {
+                var defaultStyle = {};
+                var element = document.body.appendChild(document.createElement(tagName));
+                var computedStyle = getComputedStyle(element);
+                for (var i = 0; i < computedStyle.length; i++) {
+                    defaultStyle[computedStyle[i]] = computedStyle[computedStyle[i]];
+                }
+                document.body.removeChild(element);
+                return defaultStyle;
+            }
+
+            function getDefaultStyleByTagName(tagName) {
+                tagName = tagName.toUpperCase();
+                if (!defaultStylesByTagName[tagName]) {
+                    defaultStylesByTagName[tagName] = computeDefaultStyleByTagName(tagName);
+                }
+                return defaultStylesByTagName[tagName];
+            }
+
+            return function serializeWithStyles() {
+                if (this.nodeType !== Node.ELEMENT_NODE) {
+                    throw new TypeError();
+                }
+                var cssTexts = [];
+                var elements = this.querySelectorAll("*");
+                for (var i = 0; i < elements.length; i++) {
+                    var e = elements[i];
+                    if (!noStyleTags[e.tagName]) {
+                        var computedStyle = getComputedStyle(e);
+                        var defaultStyle = getDefaultStyleByTagName(e.tagName);
+                        cssTexts[i] = e.style.cssText;
+                        for (var ii = 0; ii < computedStyle.length; ii++) {
+                            var cssPropName = computedStyle[ii];
+                            if (computedStyle[cssPropName] !== defaultStyle[cssPropName]) {
+                                e.style[cssPropName] = computedStyle[cssPropName];
+                            }
+                        }
+                    }
+                }
+                var result = this.outerHTML;
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].style.cssText = cssTexts[i];
+                }
+                return result;
+            }
+        };
+    }
+})();
 
 //Returns true if it is a DOM node
 function isNode(o) {
@@ -128,4 +197,44 @@ createGuid = function() {
         var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
+};
+
+
+/*
+ * Finds the element in array and removes
+ * @param {mixed} elem Elements itself
+ * @param {boolean} splice if true removes completely and shifts the index of others
+ * @returns {undefined}
+ */
+Array.prototype.removeElement = function(elem, splice) {
+    splice = typeof splice !== 'undefined' ? splice : true;
+    var index = this.indexOf(elem);
+    if (index != -1)
+        if (splice)
+            this.splice(index, 1);
+        else
+            delete this[index];
+};
+/**
+ * Finds an element according to given function when returns true
+ 
+ 
+ */
+
+if (!Array.prototype.find) {
+    Array.prototype.find = function(f) {
+        for (var i = 0; i < this.length; i++) {
+            if (f(this[i], i)) {
+                return this[i];
+            }
+        }
+        return false;
+    };
+}
+
+Array.prototype.diff = function(that) {
+    return {
+        enter: $(that).not(this).get(),
+        exit: $(this).not(that).get()
+    };
 };

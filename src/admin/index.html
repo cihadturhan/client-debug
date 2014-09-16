@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Admin Page</title>
+
+        <script src="../helper.js"></script>
+        <script src="../config.js"></script>
+        <script src="socket.io-1.0.6.js"></script>
+        <script src="jquery-1.9.1.min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/uikit/2.9.0/js/uikit.min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/4.3.0/codemirror.min.js"></script>
+        <script src="js/codemirror/javascript.js"></script>
+        <script src="js/inspector-json/inspector-json.js"></script>
+
+
+        <script id="lazyload" type="x/y">
+(function() {
+var elem = document.createElement("script");
+elem.type = "text/javascript";
+elem.src = '__src__';
+elem.onload = function() {
+socket.emit('response',{type:'text', data: 'Script Loaded'});
+};
+document.head.appendChild(elem);
+})();
+        </script>
+
+        <script src="app.js">
+
+        </script>
+
+        <link rel="stylesheet" href="css/uikit.almost-flat.min.css"/>
+        <link rel="stylesheet" href="css/codemirror.uikit.css"/>
+        <link rel="stylesheet" href="css/inspector-json.css"/>
+        <!--<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/uikit/1.2.0/css/uikit.almost-flat.css"/>-->
+
+    </head>
+    <body>
+        <nav class="uk-navbar uk-navbar-attached" style="min-height: 30px;">
+            <div class="uk-container uk-container-center">
+
+            </div>
+        </nav>
+        <div class="uk-container uk-container-center" style="padding-top:30px;" id="admin">
+            <div class="uk-grid">
+                <div class="uk-width-medium-1-4" id="user">
+                    <h2>User List</h2>
+                    <div>
+                        <form class="uk-form">
+                            <fieldset data-uk-margin="" id="user-list">
+
+                            </fieldset>
+                            <!--                            <ul class="uk-list uk-list-striped uk-width-medium-1-1 uk-active" data-uk-tab="" >
+                                                        </ul>-->
+                    </div>
+                    </form>
+                </div>
+                <div class="uk-width-medium-3-4" id="io">
+
+                    <h2>Input</h2>
+
+                    <ul class="uk-tab" data-uk-tab="{connect:'#input-content'}">
+                        <li class="uk-active"><a href="">Command</a></li>
+                        <li><a href="">Script Lazyload </a></li>
+                        <li><a href="">DOM </a></li>
+                        <li><a href="">Event Listeners</a></li>
+                        <li><a href="">Miscellaneous</a></li>
+                    </ul>
+
+
+                    <ul id="input-content" class="uk-switcher uk-margin">
+                        <li class="uk-active">
+                            <p class="uk-text-bold">Enter Your Command Below</p>
+                            <form class="uk-form uk-form-stacked" id="input-form">
+                                <div class="uk-form-row">
+                                    <textarea rows="10" placeholder="Type something like window.alert('This is admin')" class="uk-width-1-1" id="input"></textarea>
+                                </div>
+                                <div class="uk-form-row">
+                                    <button class="uk-button uk-width-1-1 uk-button-primary" id="send-btn">Send Command</button>
+                                </div>
+                            </form>
+                        </li>
+                        <li>
+                            <p class="uk-text-bold">Click the script to load</p>
+                            <div id="jsList" style="max-height: 500px; overflow-y:auto;">
+                                <form class="uk-form">
+
+                                    <fieldset data-uk-margin>
+                                        <input class="uk-width-1-1" type="text" placeholder="Search Script" id="script-search-text">
+                                    </fieldset>
+
+                                </form>
+                                <ul id="js-list" class="uk-list uk-list-striped">
+                                    <!--                        <li ng-repeat="jsLink in jsList | filter:search">
+                                                                <a ng-href="#" target="_self" ng-click="loadJS(jsLink.latest)">{{jsLink.name}}</a>
+                                                            </li>-->
+                                </ul>
+                            </div>
+
+                        </li>
+                        <li>
+                            <p class="uk-text-bold">Select one of the method the import the DOM from client</p>
+                            <button class="uk-button uk-width-1-1 uk-button-primary">Full HTML Snapshot</button>
+                        </li>
+                        <li>
+                            <p class="uk-text-bold">Check the boxes you want to listen</p>
+                        </li>
+                        <li>
+                            <p class="uk-text-bold">Measure Ping, etc</p>
+                        </li>
+                    </ul>
+
+                    <hr class="uk-grid-divider" />
+
+                    <h2 class="">Output</h2>
+                    <ul class="uk-tab" data-uk-tab="{connect:'#output-content'}">
+                        <li class="uk-active"><a href="">JSON</a></li>
+                        <li><a href="">Text</a></li>
+                        <li><a href="">HTML</a></li>
+                    </ul>
+
+                    <ul id="output-content" class="uk-switcher uk-margin">
+                        <li class="uk-active">
+                            <div class="uk-width-medium-2-4" id="json" style="line-break: normal">
+                                <!--                    <json-explorer json-data="{{data}}" > </json-explorer>-->
+                            </div>
+
+                        </li>
+                        <li>
+                            <form class="uk-form uk-form-stacked">
+                                <div class="uk-form-row">
+                                    <textarea rows="10" placeholder="" class="uk-width-1-1" id="output"></textarea>
+                                </div>
+                            </form>
+
+                        </li>
+                        <li>
+                            <div id="html-preview">
+                                <iframe ></iframe>
+                            </div>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
