@@ -140,7 +140,8 @@ config = {
                 switch (message.type) {
                     case 'json':
                         var text = message.data;
-                        (typeof text === 'undefined') && (text = 'undefined')
+                        (typeof text === 'undefined') && (text = 'undefined');
+                        (typeof text === 'string' || typeof text === 'number') && (text = {"": text });
                         var jsonText = JSON.stringify(text);
                         try {
                             viewer.view(jsonText);

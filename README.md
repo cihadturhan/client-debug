@@ -1,7 +1,7 @@
 client-debug
 ============
-Think you have developed a web app, tested all the modules and released.<br/>
-And a problem occured on the client side because of localization, browser type etc.
+Think you have developed a web app, tested all the modules and released. And then,
+a problem occurred on the client side because of localization, network, web browser etc.
 
 What do clients say when there is a problem in your web page?
 
@@ -17,30 +17,31 @@ What does your boss say?
 
 But, what error?
 
->Well, dear friend, you're all alone. Find it and solve.
-
-Are you tired of this sh*t?
-
+Well, dear friend, you're all alone. Find it and solve. I'm tired of this sh*t.
 Yes, I do and created this library. Sometimes a detailed error log still doesn't work and
-you should be on the computer which customer uses. This library lets you connect the clients
-when they are on your web page and gives you opportunity to do followings:
+you should be on the computer customer uses.
 
-- Lazyload any javascript/css file and use it.
+---
 
-- Dump complete HTML they are viewing with all css and javascript files
+This library lets you connect the clients when they are on your web page and
+gives you opportunity to do followings:
 
-- Silently run your tests and see results
+- [x] Evaluate any javascript code in realtime
 
-- Measure pings to your server
+- [x] Lazyload any javascript/css files to use it.
 
-- Evaluate any javascript code in realtime
+- [x] Dump complete HTML they are viewing with all css and javascript files
 
-- Listen all the click, keydown, bla bla events instantly
+- [ ] Silently run your tests and see results
 
-- More? It's up to your imagination. Have an idea? Report on [issues page](/issues).
+- [ ] Measure pings to your server
+
+- [ ] Listen all the click, keydown, bla bla events instantly
+
+More? It's up to your imagination. Have an idea? Report on [issues page](/issues).
 
 
-Serverside script only depends socket.io
+Serverside script only depends socket.io.
 Admin panel uses jquery
 
 Want to add new item on the list? Read [contributing.md](/blob/master/CONTRIBUTING.md) and submit a pull request, I'll happily accept it.

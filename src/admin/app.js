@@ -21,7 +21,7 @@ for (var key in config) {
 
 
 function contenateOutput(text) {
-    var inputText = CM.getValue();
+    var inputText = CM.getValue()?CM.getValue():'';
     CM.setValue('');
     var outputText = $('#output').val();
     $('#output').val(
