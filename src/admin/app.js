@@ -1,9 +1,12 @@
+//TO-DO: Add admin request with a request id and client lists. Make it generic
 var userData = {
     userId: Math.floor(1000 * Math.random()),
     userName: 'admin',
     "you": "some data",
     admin: 1
 };
+
+var responseTypes = ['json', 'html', 'text', 'image']; //TO-DO: image
 
 var userIds = [],
         CM; //codemirror instance;
@@ -90,7 +93,7 @@ $().ready(function() {
     
     $('#input-form').submit(function(e){
         e.preventDefault();
-    })
+    });
 
     //initialize code input
     CM = CodeMirror.fromTextArea($('#input')[0]);

@@ -84,8 +84,8 @@ config = {
         }
     },
     "eval": {
-        client: function(message) {
-            var data, response;
+        client: function(message, remote) {
+            var data, resp;
             try {
                 data = eval(message);
                 if (typeof data === 'function') {
@@ -98,9 +98,9 @@ config = {
                 };
             }
 
-            response = {type: 'json', data: JSON.decycle(data)};
+            resp = new Response(JSON.decycle(data), remote.requestId, remote.subrequestId);
 
-            this.emit('response', response);
+            this.emit('response', resp);
         },
         server: function(message, userIds) {
             if (this.rooms.indexOf('admin') > -1) {
@@ -181,10 +181,10 @@ config = {
         }
     },
     domSnapshot: {
-        client: function() {
-            var res = document.documentElement.serializeWithStyles();
-            var response = {type: 'html', data: res};
-            this.emit('response', response);
+        client: function(message, remoteData) {
+            var data = document.documentElement.serializeWithStyles();
+            var resp = new Response(data, remoteData.requestId, remoteData.subrequestId);
+            this.emit('response', resp);
         },
         server: function() {
             config.eval.server.call(this, arguments);
