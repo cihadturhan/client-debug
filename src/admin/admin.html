@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Admin Page</title>
+
+        <script src="../helper.js"></script>
+        <script src="socket.io-1.0.6.js"></script>
+        <script src="angular.min.js"></script>
+        <script src="gd-ui-jsonexplorer.js"></script>
+
+        <script id="lazyload" type="x/y">
+            (function() {
+            var elem = document.createElement("script");
+            elem.type = "text/javascript";
+            elem.src = __src__;
+            elem.onload = function() {
+            alert("script loaded");
+            };
+            document.head.appendChild(elem);
+            })();
+        </script>
+
+        <script src="app.js">
+
+        </script>
+
+        <link rel="stylesheet" href="uikit.almost-flat.min.css"/>
+        <link rel="stylesheet" href="gd-ui-jsonexplorer.css"/>
+        <!--<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/uikit/1.2.0/css/uikit.almost-flat.css"/>-->
+
+    </head>
+    <body>
+        <div class="uk-container uk-container-center" ng-app="admin">
+            <div class="uk-grid uk-grid-divider">
+                <div class="uk-width-medium-1-4" ng-controller="user">
+                    <ul class="uk-list uk-list-striped uk-width-medium-1-2 uk-active" data-uk-tab="">
+                        <li ng-repeat="user in userList"> 
+                            <a ng-href="#" target="_self" ng-click="selectUser(user)">{{user.userName}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="uk-width-medium-2-4" ng-controller="io">
+
+                    <fieldset class="uk-form">
+                        <legend>Chat Screen</legend>
+                        <div class="uk-form-row">
+                            <textarea rows="10" placeholder="Textarea text" class="uk-width-1-1" ng-model="output"></textarea>
+                        </div>
+                        <div class="uk-form-row">
+                            <textarea rows="5" enter-submit="submit()" placeholder="Type something like window.alert('This is admin')" class="uk-width-1-1" ng-model="input"></textarea>
+                        </div>
+                    </fieldset>
+
+                </div>
+
+                <div class="uk-width-medium-1-4" ng-controller="jsList" style="max-height: 500px; overflow-y:auto;">
+                    <form class="uk-form">
+
+                        <fieldset data-uk-margin>
+                            <legend>Search Script</legend>
+                            <input type="text" placeholder="" ng-model="search.name">
+                        </fieldset>
+
+                    </form>
+                    <ul id="js-list" class="uk-list uk-list-striped">
+                        <li ng-repeat="jsLink in jsList | filter:search"> 
+                            <a ng-href="#" target="_self" ng-click="loadJS(jsLink.latest)">{{jsLink.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="uk-width-medium-2-4" ng-controller="json">
+                    <json-explorer json-data="{{data}}" > </json-explorer>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

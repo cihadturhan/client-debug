@@ -3,7 +3,7 @@
  * Websocket iletisimi icin kullanilir. Su an aktif degildir
  * Eger gerekli olursa burdan kullanilabilir
  * 
- * @name socketSend
+ * @name socketWrapper
  * @function
  */
 userData = {

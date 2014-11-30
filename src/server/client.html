@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Admin Page</title>
+
+        <script src="../client/socket.io-1.0.6.js"></script>
+
+        <script>
+
+            var socket,
+                    userData = {
+                        userName: 'John Doe',
+                        userId: 65656
+                    };
+
+            var clientDebug = (function() {
+                socket = io('http://localhost:3000');
+                socket.emit('register', userData);
+                setInterval(function() {
+                    socket.emit('check', '1');
+                }, 2000);
+
+            })();
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
